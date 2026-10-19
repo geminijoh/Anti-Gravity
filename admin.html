@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>다이어트 플랜 관리자 콘솔</title>
+  <meta name="theme-color" content="#0a0f1d" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="admin.css" />
+</head>
+<body>
+
+  <!-- ==================== PIN 잠금 화면 (초기 비번: 0000) ==================== -->
+  <div id="authOverlay" class="auth-overlay">
+    <div class="auth-box">
+      <div class="lock-icon">🔒</div>
+      <h2>관리자 인증</h2>
+      <p>보안을 위해 4자리 비밀번호를 입력해주세요.<br><small style="color:#818cf8;">(초기 비밀번호: 0000)</small></p>
+
+      <div class="pin-display">
+        <div class="pin-dot" id="dot-0"></div>
+        <div class="pin-dot" id="dot-1"></div>
+        <div class="pin-dot" id="dot-2"></div>
+        <div class="pin-dot" id="dot-3"></div>
+      </div>
+
+      <div class="pin-keypad">
+        <button class="key-btn" onclick="handlePinInput('1')">1</button>
+        <button class="key-btn" onclick="handlePinInput('2')">2</button>
+        <button class="key-btn" onclick="handlePinInput('3')">3</button>
+        <button class="key-btn" onclick="handlePinInput('4')">4</button>
+        <button class="key-btn" onclick="handlePinInput('5')">5</button>
+        <button class="key-btn" onclick="handlePinInput('6')">6</button>
+        <button class="key-btn" onclick="handlePinInput('7')">7</button>
+        <button class="key-btn" onclick="handlePinInput('8')">8</button>
+        <button class="key-btn" onclick="handlePinInput('9')">9</button>
+        <button class="key-btn" onclick="handlePinClear()" style="font-size:0.9rem; color:var(--text-muted);">지우기</button>
+        <button class="key-btn" onclick="handlePinInput('0')">0</button>
+        <button class="key-btn" onclick="handlePinBackspace()">⌫</button>
+      </div>
+
+      <div style="margin-top: 15px;">
+        <a href="index.html" class="btn btn-secondary btn-sm" style="width:100%;">← 메인 대시보드로 돌아가기</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== 관리자 메인 콘솔 ==================== -->
+  <div class="admin-container">
+    
+    <!-- 상단 헤더 -->
+    <header class="admin-header">
+      <div class="brand-area">
+        <div class="brand-badge">⚡</div>
+        <div class="brand-text">
+          <h1>다이어트 관리자 센터</h1>
+          <p>내용 실시간 편집 & 스마트폰 즉시 동기화</p>
+        </div>
+      </div>
+      <div class="header-actions">
+        <a href="index.html" class="btn btn-secondary btn-sm">📱 사용자 화면 보기</a>
+        <button id="logoutBtn" class="btn btn-danger btn-sm" onclick="handleLogout()">로그아웃</button>
+      </div>
+    </header>
+
+    <!-- 탭 내비게이션 -->
+    <nav class="admin-tabs">
+      <button class="tab-btn active" data-tab="tab-profile">🎯 신체 & 목표</button>
+      <button class="tab-btn" data-tab="tab-checklist">📋 체크리스트</button>
+      <button class="tab-btn" data-tab="tab-workout">💪 14일 운동 플랜</button>
+      <button class="tab-btn" data-tab="tab-diet">🥗 14일 식단 플랜</button>
+      <button class="tab-btn" data-tab="tab-records">📊 체중·수분 기록</button>
+      <button class="tab-btn" data-tab="tab-system">⚙️ 설정 & 백업</button>
+    </nav>
+
+    <!-- ==================== TAB 1: 신체 & 목표 ==================== -->
+    <section id="tab-profile" class="panel active">
+      <div class="admin-card">
+        <h2>🎯 신체 분석 및 감량 목표 설정</h2>
+        <p class="desc">대시보드 상단 프로필 카드 및 통계에 실시간 반영됩니다.</p>
+
+        <form id="profileForm" onsubmit="saveProfile(event)">
+          <div class="form-grid">
+            <div class="form-group">
+              <label>프로젝트 제목 <span class="badge">필수</span></label>
+              <input type="text" id="prof-title" required />
+            </div>
+
+            <div class="form-group">
+              <label>신장 (cm)</label>
+              <input type="number" id="prof-height" step="0.1" required />
+            </div>
+
+            <div class="form-group">
+              <label>시작 체중 (kg) <span class="badge">기준점</span></label>
+              <input type="number" id="prof-start-weight" step="0.1" required />
+            </div>
+
+            <div class="form-group">
+              <label>목표 체중 (kg)</label>
+              <input type="number" id="prof-target-weight" step="0.1" required />
+            </div>
+
+            <div class="form-group">
+              <label>기초대사량 (BMR, kcal)</label>
+              <input type="number" id="prof-bmr" required />
+            </div>
+
+            <div class="form-group">
+              <label>활동대사량 (TDEE, kcal)</label>
+              <input type="number" id="prof-tdee" required />
+            </div>
+
+            <div class="form-group">
+              <label>일일 섭취 목표 (kcal)</label>
+              <input type="number" id="prof-target-kcal" required />
+            </div>
+
+            <div class="form-group">
+              <label>일일 칼로리 결손 (kcal)</label>
+              <input type="number" id="prof-deficit-kcal" required />
+            </div>
+
+            <div class="form-group">
+              <label>챌린지 시작일</label>
+              <input type="date" id="prof-start-date" required />
+            </div>
+
+            <div class="form-group">
+              <label>간헐적 단식 시작 시간 (시)</label>
+              <input type="number" id="prof-fasting-start" min="0" max="23" required />
+            </div>
+
+            <div class="form-group full-width">
+              <label>개인 메모 & 다짐</label>
+              <textarea id="prof-notes" placeholder="이번 2주 동안 반드시 5KG 감량하고 건강한 습관을 만든다!"></textarea>
+            </div>
+          </div>
+
+          <div class="card-actions">
+            <button type="submit" class="btn btn-primary">💾 신체 & 목표 설정 저장</button>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <!-- ==================== TAB 2: 체크리스트 ==================== -->
+    <section id="tab-checklist" class="panel">
+      <div class="admin-card">
+        <h2>📋 매일 반복 체크리스트 관리</h2>
+        <p class="desc">매일 대시보드와 체크리스트 탭에서 수행하는 미션을 수정할 수 있습니다.</p>
+
+        <div id="checklistEditorContainer">
+          <!-- 동적으로 그룹 및 아이템 렌더링 -->
+        </div>
+
+        <div class="card-actions" style="justify-content: space-between;">
+          <button type="button" class="btn btn-secondary btn-sm" onclick="addNewChecklistGroup()">+ 새 그룹 추가</button>
+          <button type="button" class="btn btn-primary" onclick="saveChecklistTemplate()">💾 체크리스트 템플릿 저장</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== TAB 3: 14일 운동 플랜 ==================== -->
+    <section id="tab-workout" class="panel">
+      <div class="admin-card">
+        <h2>💪 14일 헬스장 근력 + 실외 조깅 플랜</h2>
+        <p class="desc">수정할 일차(Day)를 선택하고 헬스 기구 및 러닝 프로그램을 변경하세요.</p>
+
+        <div class="day-selector-bar">
+          <label for="workoutDaySelect">📅 수정할 일차 선택:</label>
+          <select id="workoutDaySelect" onchange="loadWorkoutForSelectedDay()">
+            <!-- Day 1~14 옵션 동적 생성 -->
+          </select>
+        </div>
+
+        <form id="workoutDayForm" onsubmit="saveWorkoutForSelectedDay(event)">
+          <div class="form-grid">
+            <div class="form-group full-width">
+              <label>오늘의 운동 타이틀 (예: 가슴 & 삼두 + 조깅)</label>
+              <input type="text" id="w-title" required />
+            </div>
+            <div class="form-group">
+              <label>타겟 부위 (쉼표 구분)</label>
+              <input type="text" id="w-target" placeholder="대흉근, 상완삼두근" />
+            </div>
+            <div class="form-group">
+              <label>예상 소요 시간</label>
+              <input type="text" id="w-duration" placeholder="근력 45분 + 조깅 25분" />
+            </div>
+            <div class="form-group full-width">
+              <label>오늘의 핵심 팁 / 동기부여</label>
+              <input type="text" id="w-tip" />
+            </div>
+          </div>
+
+          <!-- 헬스장 근력 세부 종목 -->
+          <h3 style="margin: 20px 0 10px; font-size:1rem; color:#818cf8;">🏋️ 헬스장 기구 루틴</h3>
+          <div id="gymExercisesContainer">
+            <!-- 운동 종목 리스트 동적 생성 -->
+          </div>
+          <button type="button" class="btn btn-secondary btn-sm" style="margin-bottom:20px;" onclick="addGymExercise()">+ 근력 운동 추가</button>
+
+          <!-- 실외 조깅 / 유산소 -->
+          <h3 style="margin: 20px 0 10px; font-size:1rem; color:#ec4899;">🏃 실외 조깅 / 유산소</h3>
+          <div class="form-grid">
+            <div class="form-group">
+              <label>조깅 유형</label>
+              <input type="text" id="w-cardio-type" placeholder="이지 조깅 / 인터벌" />
+            </div>
+            <div class="form-group">
+              <label>시간 (분)</label>
+              <input type="number" id="w-cardio-duration" />
+            </div>
+            <div class="form-group">
+              <label>목표 거리 / 페이스</label>
+              <input type="text" id="w-cardio-target" placeholder="3km (6분 30초/km)" />
+            </div>
+            <div class="form-group full-width">
+              <label>조깅 팁 & 세부 코스</label>
+              <textarea id="w-cardio-tip"></textarea>
+            </div>
+          </div>
+
+          <div class="card-actions">
+            <button type="submit" class="btn btn-primary">💾 해당 일차(Day) 운동 저장</button>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <!-- ==================== TAB 4: 14일 식단 플랜 ==================== -->
+    <section id="tab-diet" class="panel">
+      <div class="admin-card">
+        <h2>🥗 14일 식단 가이드 편집</h2>
+        <p class="desc">16:8 간헐적 단식 기반 일자별 점심, 간식, 저녁 메뉴를 수정할 수 있습니다.</p>
+
+        <div class="day-selector-bar">
+          <label for="dietDaySelect">📅 수정할 일차 선택:</label>
+          <select id="dietDaySelect" onchange="loadDietForSelectedDay()">
+            <!-- Day 1~14 옵션 동적 생성 -->
+          </select>
+        </div>
+
+        <form id="dietDayForm" onsubmit="saveDietForSelectedDay(event)">
+          <!-- 점심 -->
+          <div style="background:rgba(255,255,255,0.02); padding:16px; border-radius:12px; margin-bottom:14px; border:1px solid var(--border-color);">
+            <h3 style="font-size:0.95rem; color:#10b981; margin-bottom:12px;">🍚 점심 (12:00 첫 식사)</h3>
+            <div class="form-grid">
+              <div class="form-group full-width">
+                <label>메뉴 명칭</label>
+                <input type="text" id="d-lunch-title" required />
+              </div>
+              <div class="form-group">
+                <label>예상 칼로리 (kcal)</label>
+                <input type="number" id="d-lunch-kcal" required />
+              </div>
+              <div class="form-group full-width">
+                <label>식단 팁 & 영양 포인트</label>
+                <input type="text" id="d-lunch-tip" />
+              </div>
+            </div>
+          </div>
+
+          <!-- 간식 -->
+          <div style="background:rgba(255,255,255,0.02); padding:16px; border-radius:12px; margin-bottom:14px; border:1px solid var(--border-color);">
+            <h3 style="font-size:0.95rem; color:#f59e0b; margin-bottom:12px;">🥜 간식 (15:30)</h3>
+            <div class="form-grid">
+              <div class="form-group full-width">
+                <label>메뉴 명칭</label>
+                <input type="text" id="d-snack-title" required />
+              </div>
+              <div class="form-group">
+                <label>예상 칼로리 (kcal)</label>
+                <input type="number" id="d-snack-kcal" required />
+              </div>
+            </div>
+          </div>
+
+          <!-- 저녁 -->
+          <div style="background:rgba(255,255,255,0.02); padding:16px; border-radius:12px; margin-bottom:14px; border:1px solid var(--border-color);">
+            <h3 style="font-size:0.95rem; color:#06b6d4; margin-bottom:12px;">🥗 저녁 (19:00 마지막 식사)</h3>
+            <div class="form-grid">
+              <div class="form-group full-width">
+                <label>메뉴 명칭</label>
+                <input type="text" id="d-dinner-title" required />
+              </div>
+              <div class="form-group">
+                <label>예상 칼로리 (kcal)</label>
+                <input type="number" id="d-dinner-kcal" required />
+              </div>
+              <div class="form-group full-width">
+                <label>식단 팁 & 영양 포인트</label>
+                <input type="text" id="d-dinner-tip" />
+              </div>
+            </div>
+          </div>
+
+          <div class="card-actions">
+            <button type="submit" class="btn btn-primary">💾 해당 일차(Day) 식단 저장</button>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <!-- ==================== TAB 5: 체중·수분 기록 관리 ==================== -->
+    <section id="tab-records" class="panel">
+      <div class="admin-card">
+        <h2>📊 사용자 일자별 기록 관리 (체중 & 수분)</h2>
+        <p class="desc">사용자가 입력한 체중 및 수분 기록을 직접 수정하거나 보정할 수 있습니다.</p>
+
+        <div class="table-responsive">
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th>일차</th>
+                <th>날짜</th>
+                <th>체중 (kg)</th>
+                <th>수분 섭취 (잔)</th>
+                <th>조치</th>
+              </tr>
+            </thead>
+            <tbody id="recordsTableBody">
+              <!-- Day 1~14 행 동적 생성 -->
+            </tbody>
+          </table>
+        </div>
+
+        <div class="card-actions">
+          <button type="button" class="btn btn-primary" onclick="saveAllRecords()">💾 전체 기록 일괄 저장</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== TAB 6: 시스템 & 백업 ==================== -->
+    <section id="tab-system" class="panel">
+      <div class="admin-card">
+        <h2>🔒 관리자 비밀번호 변경</h2>
+        <p class="desc">초기 비밀번호(0000)를 원하는 4자리 숫자로 변경할 수 있습니다.</p>
+
+        <form id="pwChangeForm" onsubmit="changeAdminPassword(event)">
+          <div class="form-grid">
+            <div class="form-group">
+              <label>새 비밀번호 (4자리 숫자)</label>
+              <input type="password" id="newPin" maxlength="4" pattern="[0-9]{4}" placeholder="예: 1234" required />
+            </div>
+            <div class="form-group">
+              <label>새 비밀번호 확인</label>
+              <input type="password" id="confirmPin" maxlength="4" pattern="[0-9]{4}" placeholder="예: 1234" required />
+            </div>
+          </div>
+          <div class="card-actions">
+            <button type="submit" class="btn btn-primary">비밀번호 변경</button>
+          </div>
+        </form>
+      </div>
+
+      <div class="admin-card">
+        <h2>💾 데이터 백업 및 복원</h2>
+        <p class="desc">다른 기기(스마트폰/PC)로 데이터를 옮기거나 백업할 때 사용하세요.</p>
+
+        <div style="display:flex; flex-wrap:wrap; gap:12px; margin-top:14px;">
+          <button type="button" class="btn btn-secondary" onclick="exportDataToJson()">📥 전체 데이터 백업 다운로드 (JSON)</button>
+          
+          <label class="btn btn-secondary" style="cursor:pointer;">
+            📤 백업 파일 복원 (JSON)
+            <input type="file" id="importFileInput" accept=".json" style="display:none;" onchange="importDataFromJson(event)" />
+          </label>
+        </div>
+      </div>
+
+      <div class="admin-card" style="border-color:rgba(239, 68, 68, 0.4);">
+        <h2 style="color:#f87171;">⚠️ 초기화 영역</h2>
+        <p class="desc">모든 수정 데이터를 지우고 프로젝트 초기 상태로 되돌립니다.</p>
+
+        <div style="display:flex; gap:10px; margin-top:10px;">
+          <button type="button" class="btn btn-danger" onclick="resetToFactoryDefault()">초기 설정값으로 완전 리셋</button>
+        </div>
+      </div>
+    </section>
+
+  </div>
+
+  <script src="data.js"></script>
+  <script src="admin.js"></script>
+</body>
+</html>
